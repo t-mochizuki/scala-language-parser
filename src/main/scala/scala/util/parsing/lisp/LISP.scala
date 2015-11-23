@@ -8,22 +8,24 @@ object LISP extends RegexParsers {
   override val skipWhitespace = false
 
   /**
-   * s_expression  ::= atomic_symbol | "(" s_expression "." s_expression ")" | list
-   * list          ::= "(" s_expression {s_expression} ")"
-   * atomic_symbol ::= letter atom_part
-   * atom_part     ::= empty | letter atom_part | number atom_part
-   * letter        ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-   * number        ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"
-   * empty         ::= " "
+   * s_exp      ::= atom | list
+   * atom       ::= number | symbol | string
+   * list       ::= () | "(" s_exp_list ")" | "(" s_exp_list "." s_exp ")" | "\'" s_exp | "#\'" s_exp
+   * s_exp_list ::= s_exp | s_exp_list s_exp
+   * string     ::= "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+   * number     ::= "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"
+   * symbol     ::= "+" | "-" | "*" | "/"
    */
 
-  def s_expression: Parser[Any] = (atomic_symbol | "(" ~ s_expression ~ rep(empty) ~ "." ~ rep(empty) ~ s_expression ~ ")" | list)
-  def list = "(" ~ s_expression ~ rep(s_expression) ~ ")"
-  def atomic_symbol = letter ~ opt(atom_part)
-  def atom_part: Parser[Any] = (empty | letter ~ opt(atom_part) | number ~ opt(atom_part))
-  def letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-  def number = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0"
-  def empty = " "
-  def parse(input: String) = parseAll(s_expression, input)
+  def s_exp: Parser[Any] = atom | list | space
+  def atom = number | symbol | string
+  def list = "(" ~ ")" | "(" ~ s_exp_list ~ ")" | "\'" ~ s_exp | sharp_quote ~ s_exp
+  def s_exp_list: Parser[Any] = rep(s_exp)
+  def number = ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "0").+
+  def symbol = "+" | "-" | "*" | "/"
+  def string = ("a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z").+
+  def sharp_quote = "#" ~ "\'"
+  def space = " "
+  def parse(input: String) = parseAll(s_exp, input)
 }
 
